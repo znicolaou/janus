@@ -42,10 +42,6 @@ usage: python janus.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [sigma
   output is 1 to output time data
 
   filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat
-
-    If a filebaseic.dat file exist, the initial phases are read from there; otherwise random initial phases are used
-
-    If a filebasefrequencies.dat file exist, the natural frequency distribution is read from there; otherwise the alternating diamond distribution is used
 ___
 Example I: python janus.py 50 1000 0.1 0.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 1 1 0 0.0 0.0 1 1 data/test/test 1
 ___
