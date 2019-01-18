@@ -1,7 +1,7 @@
 # pseudospectral_cgl 
-The file janus.py is a python script to numerically integrate Janus oscillator networks using SciPy's Complex-valued Variable-coefficient Ordinary Differential Equation solver.
+The file janus.py is a python script to numerically integrate Janus oscillator networks using SciPy's Complex-valued Variable-coefficient Ordinary Differential Equation solver.  The file plot.nb is a Mathematica notebook which can be used to plot results.
 # System requirements
-This code has been run with anaconda2, which can be downloaded from the Anaconda website: https://www.anaconda.com/download/#macos.  It requires packages numpy, networkx, scipy, and progressbar, which can be installed with `pip install numpy scipy networkx progressbar` after installing anaconda2.
+This python code has been run with anaconda2, which can be downloaded from the Anaconda website: https://www.anaconda.com/download/#macos.  It requires packages numpy, networkx, scipy, and progressbar, which can be installed with `pip install numpy scipy networkx progressbar` after installing anaconda2.  The Mathematica code has been run with Mathematica 11.1.1.0.
 # Usage
 Running the terminal command `python janus.py` will produce the following usage message.  
 usage: python janus.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [sigma] [dim] [k] [numlinks] [delta0] [delta] [seed] [seed2] [output] [filebase]  
