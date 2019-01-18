@@ -2,7 +2,8 @@
 The file janus.py is a python script to numerically integrate Janus oscillator networks using SciPy's Complex-valued Variable-coefficient Ordinary Differential Equation solver.
 # System requirements
 This code has been run with anaconda2, which can be downloaded from the Anaconda website: https://www.anaconda.com/download/#macos.  It requires packages numpy, networkx, scipy, and progressbar, which can be installed with `pip install numpy scipy networkx progressbar` after installing anaconda2.
-
+# Usage
+Running the script `python janus.py` will produce the following usage message. 
 usage: python janus.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [sigma] [dim] [k] [numlinks] [delta0] [delta] [seed] [seed2] [output] [filebase]  
   N is the number of oscillators  
   t1 is the total integration time  
