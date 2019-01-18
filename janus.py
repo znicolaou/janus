@@ -140,7 +140,7 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, type,
     # Order parameter and frequency averaging
     r = np.zeros(int(t1/dt))
     psi = np.zeros(int(t1/dt))
-    for j in xrange(int(t1/dt)):
+    for j in range(int(t1/dt)):
         r[j], psi[j] = r_psi(theta[j, :])
 
     #Clustering
@@ -367,8 +367,8 @@ if(len(sys.argv) != 21):
     print('seed2 is random seed for heterogeneity')
     print('output is 1 to output time data')
     print('filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat')
-    print('example: python janus.py 50 1000 0.1 0.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 1 1 0 0.0 0.0 1 1 data/test/test 1')
-    print('example: python janus.py 24 1000 0.1 0.1 0.1 10 1e-2 0.3 0.3 0.21 0.21 2 1 0 0.0 0.0 1 1 data/test/test 1')
+    print('example: python janus.py 50 1000 0.1 0.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 1 1 0 0.0 0.0 1 1 data/random/random 1')
+    print('example: python janus.py 50 1000 0.1 0.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 1 1 0 0.0 0.0 1 1 data/chimera/chimera 1')
     exit()
 
 n = int(sys.argv[1])  # oscillators
