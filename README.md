@@ -49,7 +49,7 @@ seed2 is random seed for heterogeneity
 filebase is the output file string base; the program assumes a filebaseic.dat exists for the initial condition.  
 example: python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.55 0.25 0.0 0.004 0.02 5.0 data/syncbranch/sync  
 ___
-#Output files
+# Output files
 Usage 1  
 The program always appends a summary of statistics about the simulation to the file filebaseorder.dat, which contains the coupling constant sigma, the heterogeneity strength delta, the mean order parameter r, and the mean number of phase-locked oscillators Nlocked, where the means are calculated from time t2, to t1. The program also always saves the final state of the system to filebasefs.dat (which can be copied to another filebaseic.dat to use as initial conditions elsewhere). If the output flag is set to 1, the program also creates a file filebaseout.dat that contains more detailed data.  The first line of filebaseout.dat contains the command line that ran the program.  The second line contains the natural frequencies of each phase oscillator in each Janus oscillator.  The third line contains the instantaneous order parameter at each timestep.  The next 2N lines contains the phases of each phase oscillator in each Janus oscillator for each timestep. The next N lines contains the adjacency matrix of the network of phase oscillators.  
 
