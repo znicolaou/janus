@@ -33,54 +33,24 @@ def sparse_complex(t, phases, N, omega, nu, deltaomega, deltanu, adjext, adjint,
 ###########################################################################
 
 ############################# Adiabatic parameter change #############################
-def runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, type, k, numlinks, delta0, delta, seed, seed2, filebase, output):
+def runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, delta0, delta, seed, seed2, filebase, output):
     start = timeit.default_timer()
     np.random.seed(seed2)
 
+
     # Network structure
-    if type==1:
-        N=n
-        A1=np.zeros((N,N))
-        A2=np.zeros((N,N))
-        A3=np.zeros((N,N))
-        for k1 in range(N):
-            for k2 in range(N):
-                if(abs((k1-k2)%n) <= k):
-                    A1[k2,k1]=1
-            A1[k1,k1]=0
-            A3[k1,k1]=1
+    N=n
+    A1=np.zeros((N,N))
+    A2=np.zeros((N,N))
+    A3=np.zeros((N,N))
+    for k1 in range(N):
+        for k2 in range(N):
+            if(abs((k1-k2)%n) <= 1):
+                A1[k2,k1]=1
+        A1[k1,k1]=0
+        A3[k1,k1]=1
 
-    elif type==2:
-        N=n*n
-        A1=np.zeros((N,N))
-        A2=np.zeros((N,N))
-        A3=np.zeros((N,N))
-
-        for k1 in range(N):
-            for k2 in range(N):
-                if (abs((k1/n-k2/n)%n) + abs((k1%n - k2%n)%n) <= k):
-                    A1[k2,k1] = 1
-                    if (numlinks<0 and np.random.random(1) < -numlinks*1.0/(2*k*N)):
-                        A2[k2,k1] = -1
-            
-                if (numlinks>0 and np.random.random(1) < numlinks*1.0/N**2):
-                    A2[k2,k1] = 1
-            A1[k1,k1]=0
-            A3[k1,k1]=1
-    else:
-        print('bad dimension')
-        quit()
-
-    if (numlinks < 0):
-        alter=np.random.choice(range(len(np.where(A1==1)[0])),-numlinks,replace=False)
-        for alt in alter:
-            A2[np.where(A1==1)[0][alt],np.where(A1==1)[1][alt]]=-1
-    else:
-        alter=np.random.choice(range(len(np.where((A1+A3)==0)[0])),numlinks,replace=False)
-        for alt in alter:
-            A2[np.where((A1+A3)==0)[0][alt],np.where((A1+A3)==0)[1][alt]]=np.sign(numlinks)
-
-    adjext = csr_matrix(A1+A2)
+    adjext = csr_matrix(A1)
     adjint = csr_matrix(A3)
 
     # Natural frequencies
@@ -200,7 +170,7 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, type,
         print(filebase, delta, sigma, np.mean(r[int(t3 / dt):]), meanlocked, meanclusters, np.sum(A2), seed, t2)
 
         f = open(filebase + 'out.dat', 'w')
-        print(sys.argv[0], 2*N, *(sys.argv[2:]), sep=' ', file=f)
+        print(*(sys.argv), sep=' ', file=f)
         for i in range(N):
             print(omega[i] + delta*deltaomega[i], nu[i] + delta*deltanu[i], sep=' ', file=f, end=' ')
         print('',file=f)
@@ -208,9 +178,7 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, type,
         for i in range(0, 2*N):
             print(*(theta[int(t3 / dt) - 1:, i]), sep=' ', file=f)
         for i in range(0, N):
-            print(*(A1[i]+A2[i]), sep=' ', file=f)
-        for i in range(0, N):
-            print(*(A3[i]), sep=' ', file=f)
+            print(*(A1[i]+A2[i]+A3[i]), sep=' ', file=f)
         f.close()
 
         f = open(filebase + 'clusters.dat', 'w')
@@ -224,29 +192,20 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, type,
 ######################################################################################
 
 ############################# Adiabatic coupling branch sweep #############################
-def branchsigmasweep(N, t1, t2, t3, dt, avgcount, thrs, rthrs, pthrs, delta, dsigma, seed2, filebase):
+def branchsigmasweep(N, t1, t2, t3, dt, avgcount, thrs, sigma0, beta, rthrs, pthrs, delta, dsigma, seed2, filebase):
     start = timeit.default_timer()
-    beta0=0.25
-    beta1=0.25
-    dim=1
-    k=1
-    numlinks=0
-    output=0
-    seed=1
-    cont=True
 
-    crits=np.loadtxt(filebase+"crits.dat")
-    sigma0=np.mean(crits)
+    cont=True
     
     #forward
     sigma=sigma0
-    sh.copyfile(filebase+"middleic.dat",filebase+"currentic.dat")
-    runsim(N, t1, t2, t3, dt, avgcount, thrs, beta0, beta1, np.round(sigma,3), np.round(sigma,3), dim, k, numlinks, np.round(delta,4), np.round(delta,4), seed, seed2, filebase+"current", 0)
+    sh.copyfile(filebase+"ic.dat",filebase+"currentic.dat")
+    runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
 
     while cont:
         print('forward %.4f %.3f' %(delta, sigma))
         sh.copyfile(filebase+"currentfs.dat",filebase+"currentic.dat")
-        runsim(N, t1, t2, t3, dt, avgcount, thrs, beta0, beta1, np.round(sigma,3), np.round(sigma+dsigma,3), dim, k, numlinks, np.round(delta,4), np.round(delta,4), seed, seed2, filebase+"current", 0)
+        runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma+dsigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
         sigma=sigma+dsigma
             
         outs=np.loadtxt(filebase+"currentorder.dat")
@@ -256,6 +215,7 @@ def branchsigmasweep(N, t1, t2, t3, dt, avgcount, thrs, rthrs, pthrs, delta, dsi
 
     if(os.path.isfile(filebase+"currentorder.dat")):
         os.system('sed \$d ' + filebase+"currentorder.dat >> " + filebase + "currentsweep.dat")
+        os.system('cp ' + filebase+"currentorder.dat " + filebase + "forwardsweep.dat")
         os.remove(filebase+"currentorder.dat")
 
     #backward
@@ -263,13 +223,13 @@ def branchsigmasweep(N, t1, t2, t3, dt, avgcount, thrs, rthrs, pthrs, delta, dsi
 
     sigma=sigma0
     cont=True
-    sh.copyfile(filebase+"middleic.dat",filebase+"currentic.dat")
-    runsim(N, t1, t2, t3, dt, avgcount, thrs, beta0, beta1, np.round(sigma,3), np.round(sigma,3), dim, k, numlinks, np.round(delta,4), np.round(delta,4), seed, seed2, filebase+"current", 0)
+    sh.copyfile(filebase+"ic.dat",filebase+"currentic.dat")
+    runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
 
     while cont:
         print('backward %.4f %.3f' %(delta, sigma))
         sh.copyfile(filebase+"currentfs.dat",filebase+"currentic.dat")
-        runsim(N, t1, t2, t3, dt, avgcount, thrs, beta0, beta1, np.round(sigma,3), np.round(sigma-dsigma,3), dim, k, numlinks, np.round(delta,4), np.round(delta,4), seed, seed2, filebase+"current", 0)
+        runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma-dsigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
         sigma=sigma-dsigma
             
         outs=np.loadtxt(filebase+"currentorder.dat")
@@ -279,74 +239,22 @@ def branchsigmasweep(N, t1, t2, t3, dt, avgcount, thrs, rthrs, pthrs, delta, dsi
     
     sigma1=sigma+dsigma
     crits=[sigma1, sigma2]
-    np.savetxt(filebase+'newcrits.dat',crits)
+    np.savetxt(filebase+'crits.dat',crits)
 
     if(os.path.isfile(filebase+"currentorder.dat")):
-        os.system('sed \$d ' + filebase+"currentorder.dat >> " + filebase + "currentsweep.dat")
+        os.system('sed \$d ' + filebase+"currentorder.dat >> " + filebase + "sweep.dat")
+        os.system('cp ' + filebase+"currentorder.dat " + filebase + "backwardsweep.dat")
         os.remove(filebase+"currentorder.dat")
 
     stop = timeit.default_timer()
     print('sweeptime: %f' % (stop - start))
 ###########################################################################################
 
-############################# Adiabatic heterogeneity branch sweep #############################
-def branchdeltasweep(N, t1, t2, t3, dt, avgcount, thrs, rthrs, pthrs, delta0, delta1, dsigma, ddelta, seed2, filebase):
-
-    start = timeit.default_timer()
-    beta0=0.25
-    beta1=0.25
-    dim=1
-    k=1
-    numlinks=0
-    output=0
-    seed=1
-
-    cont=True
-    delta=delta0
-    sh.copyfile(filebase+"crits0.dat", filebase+"newcrits.dat")
-    sh.copyfile(filebase+"middle0ic.dat", filebase+"middleic.dat")
-
-    crits=np.loadtxt(filebase+"newcrits.dat")
-    file=open(filebase+'critssweep.dat','a+')
-    file.write('%.4f %.3f %.3f \n'%(delta, crits[0], crits[1]))
-    file.close()
-    if os.path.exists(filebase+"middleorder.dat"):
-        os.remove(filebase+"middleorder.dat")
-    if os.path.exists(filebase+"currentsweep.dat"):
-        os.remove(filebase+"currentsweep.dat")
-    if os.path.exists(filebase+"critssweep.dat"):
-        os.remove(filebase+"critssweep.dat")
-
-    sigma=np.mean(crits)
-    runsim(N, t1, t2, t3, dt, avgcount, thrs, beta0, beta1, np.round(sigma,3), np.round(sigma,3), dim, k, numlinks, 0.0, 0.0, seed, seed2, filebase+"middle", 0)
-
-
-    while cont:
-        sh.copyfile(filebase+"newcrits.dat", filebase+"crits.dat")
-        sh.copyfile(filebase+"middlefs.dat", filebase+"middleic.dat")
-        branchsigmasweep(N, t1, t2, t3, dt, avgcount, thrs, rthrs, pthrs, delta, dsigma, seed2, filebase)
-        
-        crits=np.loadtxt(filebase+"newcrits.dat")
-        file=open(filebase+'critssweep.dat','a+')
-        file.write('%.4f %.3f %.3f \n'%(delta, crits[0], crits[1]))
-        file.close()
-        sigma=np.mean(crits)
-        
-        runsim(N, t1, t2, t3, dt, avgcount, thrs, beta0, beta1, np.round(sigma,3), np.round(sigma,3), dim, k, numlinks, np.round(delta,4), np.round(delta+ddelta,4), seed, seed2, filebase+"middle", 0)
-        delta=delta+ddelta
-        
-        outs=np.loadtxt(filebase+"middleorder.dat")
-        diffs=np.diff(outs,axis=0)[-1]
-        if np.abs(diffs[3])>pthrs or np.round(delta,4) >= np.round(delta1,4):
-            cont=False
-
-    stop = timeit.default_timer()
-    print('Sweeptime: %f' % (stop - start))
-################################################################################################
-
-if(len(sys.argv) != 21):
-    print(*sys.argv)
-    print('usage: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [sigma] [dim] [k] [numlinks] [delta0] [delta] [seed] [seed2] [output] [filebase] ')
+if(len(sys.argv) != 18 and len(sys.argv) != 16):
+    print(len(sys.argv))
+    print('Usage will depend on number of command line argument')
+    print('usage 1: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [sigma] [delta0] [delta] [seed] [seed2] [output] [filebase] ')
+    print('Used for single simulation runs with adiabatic parameter changes')
     print('N is the number of oscillators')
     print('t1 is the total integration time')
     print('t2 is the time to adiabatically change coupling from sigma0 to sigma')
@@ -358,38 +266,75 @@ if(len(sys.argv) != 21):
     print('beta is the final internal coupling constant')
     print('sigma0 is the initial external coupling constant')
     print('sigma is the final external coupling constant')
-    print('dim is network dimension, 1 for ring, 2 for grid')
-    print('k is number of neighbors to include in graph ')
-    print('numlinks is expected number of random links to add (positive) or remove (negative) in graph ')
     print('delta0 is initial frequency heterogeneity ')
     print('delta is final frequency heterogeneity ')
-    print('seed is random seed for initial condition')
+    print('seed is random seed for initial condition (if filebaseic.dat does not exist, otherwise initial conditions from file are used)')
     print('seed2 is random seed for heterogeneity')
     print('output is 1 to output time data')
     print('filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat')
-    print('example: python janus.py 50 1000 0.1 0.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 1 1 0 0.0 0.0 1 1 data/random/random 1')
-    print('example: python janus.py 50 1000 0.1 0.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 1 1 0 0.0 0.0 1 1 data/chimera/chimera 1')
+    print('Example: python janus.py 50 10000 0.1 9000.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 0.0 0.0 2 1 data/random/random 1')
+    print('This example will likely produce a chimera state.  The final state data/random/randomfs.dat can be copied to chimeraic.dat to save as an initial condition.' )
+    print('\n')
+    
+    print('usage 2: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [beta] [delta] [dsigma] [rthrs] [pthrs] [seed2] [filebase] ')
+    print('Used to adiabatically sweep out a solution branch')
+    print('N is the number of oscillators')
+    print('t1 is the total integration time')
+    print('t2 is the time to adiabatically change coupling from sigma0 to sigma')
+    print('t3 is the time to start averaging r')
+    print('dt is the time between outputs')
+    print('avgcount is the number of timesteps to average over for cluster counting')
+    print('thrs is the frequency difference threshold for cluster counting')
+    print('sigma0 is the initial external coupling constant')
+    print('beta is the internal coupling constant')
+    print('delta is frequency heterogeneity ')
+    print('dsigma is the coupling strength step')
+    print('rthrs is the threshold change in order parameter to stop branch sweep')
+    print('pthrs is the threshold change in num locked to stop branch sweep')
+    print('seed2 is random seed for the heterogeneity profile')
+    print('filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat')
+    print('example: python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.35 0.25 0.0 0.004 0.02 5.0 1 data/branches/chimera')
+    print('This will sweep out the coupling constant for the chimera initial condition.' )
+
     exit()
 
-n = int(sys.argv[1])  # oscillators
-t1 = float(sys.argv[2])  # total time
-t2 = float(sys.argv[3])  # time to adiabatically change sigma
-t3 = float(sys.argv[4])  # time to start averaging r
-dt = float(sys.argv[5])  # timestep
-avgcount = int(sys.argv[6])  # averaging count
-thrs = float(sys.argv[7])  # clustering threshold
-beta0 = float(sys.argv[8])  # initial sigma
-beta = float(sys.argv[9])  # coupling
-sigma0 = float(sys.argv[10])  # initial sigma
-sigma = float(sys.argv[11])  # coupling
-type = int(sys.argv[12])  # neighbors
-k = int(sys.argv[13])  # neighbors
-numlinks = int(sys.argv[14])  # random links
-delta0 = float(sys.argv[15])
-delta = float(sys.argv[16])
-seed = int(sys.argv[17])  # random seed
-seed2 = int(sys.argv[18])  # random seed
-filebase = sys.argv[19]  # output file name
-output = int(sys.argv[20])  # output flag
-runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, type, k, numlinks, delta0, delta, seed, seed2, filebase, output)
 
+if(len(sys.argv) == 18):
+
+    n = int(sys.argv[1])  # oscillators
+    t1 = float(sys.argv[2])  # total time
+    t2 = float(sys.argv[3])  # time to adiabatically change sigma
+    t3 = float(sys.argv[4])  # time to start averaging r
+    dt = float(sys.argv[5])  # timestep
+    avgcount = int(sys.argv[6])  # clustering averaging count
+    thrs = float(sys.argv[7])  # clustering threshold
+    beta0 = float(sys.argv[8])  # initial internal coupling strength
+    beta = float(sys.argv[9])  # final internal coupling strength
+    sigma0 = float(sys.argv[10])  # initial external coupling strength
+    sigma = float(sys.argv[11])  # final external coupling strength
+    delta0 = float(sys.argv[12]) # initial heterogeneity strength
+    delta = float(sys.argv[13]) # final heterogeneity strength
+    seed = int(sys.argv[14])  # random seed
+    seed2 = int(sys.argv[15])  # random seed
+    filebase = sys.argv[16]  # output file name
+    output = int(sys.argv[17])  # output flag
+    runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, delta0, delta, seed, seed2, filebase, output)
+
+elif(len(sys.argv) == 16):
+    
+    n = int(sys.argv[1])  # oscillators
+    t1 = float(sys.argv[2])  # total time
+    t2 = float(sys.argv[3])  # time to adiabatically change sigma
+    t3 = float(sys.argv[4])  # time to start averaging r
+    dt = float(sys.argv[5])  # timestep
+    avgcount = int(sys.argv[6])  # clustering averaging count
+    thrs = float(sys.argv[7])  # clustering threshold
+    sigma0 = float(sys.argv[8]) # initial external coupling strength
+    beta = float(sys.argv[9]) # internal coupling strength
+    delta = float(sys.argv[10]) # heterogeneity strength
+    dsigma = float(sys.argv[11]) # coupling strength step size
+    rthrs = float(sys.argv[12]) # order parameter threshold change
+    pthrs = float(sys.argv[13]) # num locked threshold change
+    seed2 = int(sys.argv[14])  # random seed for heterogeneity profile
+    filebase = sys.argv[15]  # output file name
+    branchsigmasweep(n, t1, t2, t3, dt, avgcount, thrs, sigma0, beta, rthrs, pthrs, delta, dsigma, seed2, filebase)
