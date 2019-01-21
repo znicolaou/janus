@@ -5,7 +5,8 @@ This python code has been run with anaconda2, which can be downloaded from the A
 # Usage
 Running the terminal command `python janus.py` will produce the following usage message.  
 Usage will depend on number of command line argument  
-usage 1: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [sigma] [delta0] [delta] [seed] [seed2] [output] [filebase]  
+
+usage 1: `python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [sigma] [delta0] [delta] [seed] [seed2] [output] [filebase]`  
 Used for single simulation runs with adiabatic parameter changes  
 N is the number of oscillators  
 t1 is the total integration time  
@@ -24,11 +25,11 @@ seed is random seed for initial condition (if filebaseic.dat does not exist, oth
 seed2 is random seed for heterogeneity  
 output is 1 to output time data  
 filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  
-Example: python janus.py 50 10000 0.1 9000.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 0.0 0.0 2 1 data/random/random 1  
+Example: `python janus.py 50 10000 0.1 9000.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 0.0 0.0 2 1 data/random/random 1`  
 This example will likely produce a chimera state.  The final state data/random/randomfs.dat can be copied to chimeraic.dat to save as an initial condition.  
 
 
-usage 2: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [beta] [delta] [dsigma] [rthrs] [pthrs] [seed2] [filebase]  
+usage 2: `python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [beta] [delta] [dsigma] [rthrs] [pthrs] [seed2] [filebase]`  
 Used to adiabatically sweep out a solution branch  
 N is the number of oscillators  
 t1 is the total integration time  
@@ -45,7 +46,7 @@ rthrs is the threshold change in order parameter to stop branch sweep
 pthrs is the threshold change in num locked to stop branch sweep  
 seed2 is random seed for the heterogeneity profile  
 filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  
-example: python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.35 0.25 0.0 0.004 0.02 5.0 1 data/branches/chimera/chimera  
+example: `python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.35 0.25 0.0 0.004 0.02 5.0 1 data/branches/chimera/chimera`  
 This will sweep out the coupling constant for the chimera initial condition.  
 ___
 # Output files
