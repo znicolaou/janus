@@ -18,16 +18,18 @@ beta0 is the initial internal coupling constant
 beta is the final internal coupling constant  
 sigma0 is the initial external coupling constant  
 sigma is the final external coupling constant  
-delta0 is initial frequency heterogeneity   
-delta is final frequency heterogeneity   
-seed is random seed for initial condition  
+delta0 is initial frequency heterogeneity  
+delta is final frequency heterogeneity  
+seed is random seed for initial condition (if filebaseic.dat does not exist, otherwise initial conditions from file are used)  
 seed2 is random seed for heterogeneity  
 output is 1 to output time data  
 filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  
-example: python janus.py 50 1000 0.1 0.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 0.0 0.0 1 1 data/test/test 1  
+Example: python janus.py 50 10000 0.1 9000.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 0.0 0.0 2 1 data/random/random 1  
+This example will likely produce a chimera state.  The final state data/random/randomfs.dat can be copied to chimeraic.dat to save as an initial condition.  
 
-usage 2: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [sigma] [delta0] [delta] [dsigma] [rthrs] [pthrs] [seed] [seed2] [filebase]   
-Used to adiabatically sweep out the coupling constant of a solution branch.  Stop when the change in mean order parameter of mean phase locked oscillators changes by more than rthrs and pthrs, respectively.
+
+usage 2: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [beta] [delta] [dsigma] [rthrs] [pthrs] [seed2] [filebase]  
+Used to adiabatically sweep out a solution branch  
 N is the number of oscillators  
 t1 is the total integration time  
 t2 is the time to adiabatically change coupling from sigma0 to sigma  
@@ -35,19 +37,16 @@ t3 is the time to start averaging r
 dt is the time between outputs  
 avgcount is the number of timesteps to average over for cluster counting  
 thrs is the frequency difference threshold for cluster counting  
-beta0 is the initial internal coupling constant  
-beta is the final internal coupling constant  
 sigma0 is the initial external coupling constant  
-sigma is the final external coupling constant  
-delta0 is initial frequency heterogeneity   
-delta is final frequency heterogeneity   
+beta is the internal coupling constant  
+delta is frequency heterogeneity  
 dsigma is the coupling strength step  
 rthrs is the threshold change in order parameter to stop branch sweep  
 pthrs is the threshold change in num locked to stop branch sweep  
-seed is random seed for initial condition  
-seed2 is random seed for heterogeneity  
-filebase is the output file string base; the program assumes a filebaseic.dat exists for the initial condition.  
-example: python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.55 0.25 0.0 0.004 0.02 5.0 data/syncbranch/sync  
+seed2 is random seed for the heterogeneity profile  
+filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  
+example: python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.35 0.25 0.0 0.004 0.02 5.0 1 data/branches/chimera/chimera  
+This will sweep out the coupling constant for the chimera initial condition.  
 ___
 # Output files
 Usage 1  
