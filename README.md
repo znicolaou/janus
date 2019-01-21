@@ -25,7 +25,7 @@ seed is random seed for initial condition (if filebaseic.dat does not exist, oth
 seed2 is random seed for heterogeneity  
 output is 1 to output time data  
 filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  
-Example: `python janus.py 50 10000 0.1 9000.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 0.0 0.0 2 1 data/random/random 1`  
+example `python janus.py 50 10000 0.1 9000.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 0.0 0.0 2 1 data/random/random 1`  
 This example will likely produce a chimera state.  The final state data/random/randomfs.dat can be copied to chimeraic.dat to save as an initial condition.  
 
 
@@ -46,7 +46,7 @@ rthrs is the threshold change in order parameter to stop branch sweep
 pthrs is the threshold change in num locked to stop branch sweep  
 seed2 is random seed for the heterogeneity profile  
 filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  
-example: `python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.35 0.25 0.0 0.004 0.02 5.0 1 data/branches/chimera/chimera`  
+example `python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.35 0.25 0.0 0.004 0.02 5.0 1 data/branches/chimera/chimera`  
 This will sweep out the coupling constant for the chimera initial condition.  
 ___
 # Output files
