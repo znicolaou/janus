@@ -6,7 +6,7 @@ This python code has been run with anaconda2, which can be downloaded from the A
 Running the terminal command `python janus.py` will produce the following usage message.  
 Usage will depend on number of command line argument  
 
-usage 1: `python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [beta0] [beta] [sigma0] [sigma] [delta0] [delta] [seed] [seed2] [output] [filebase]`  
+usage 1: `python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [beta0] [beta] [sigma0] [sigma] [delta0] [delta] [seed] [seed2] [filebase] [output]`  
 Used for single simulation runs with adiabatic parameter changes  
 N is the number of oscillators  
 t1 is the total integration time  
