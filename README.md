@@ -4,6 +4,7 @@ The file janus.py is a python script to numerically integrate Janus oscillator n
 This python code has been run with anaconda2, which can be downloaded from the Anaconda website: https://www.anaconda.com/download/#macos.  It requires packages numpy, networkx, scipy, and progressbar, which can be installed with `pip install numpy scipy networkx progressbar` after installing anaconda2.  The Mathematica code has been run with Mathematica 11.1.1.0.
 # Usage
 Running the terminal command `python janus.py` will produce the following usage message.  
+
 Usage will depend on number of command line argument  
 
 usage 1: `python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [beta0] [beta] [sigma0] [sigma] [delta0] [delta] [seed] [seed2] [filebase] [output]`  
@@ -24,7 +25,7 @@ delta is final frequency heterogeneity
 seed is random seed for initial condition (if filebaseic.dat does not exist, otherwise initial conditions from file are used)  
 seed2 is random seed for heterogeneity  
 filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  
-output is 1 to output time data  
+output is 1 to output time data and 0 for shorter output  
 example `python janus.py 50 10000 0.1 9000 0.1 10 1e-2 0.25 0.25 0.4 0.4 0.0 0.0 5 1 data/random/random 1`  
 This example will likely produce a chimera state.  The final state data/random/randomfs.dat can be copied to chimeraic.dat to save as an initial condition.  
 
@@ -46,7 +47,7 @@ rthrs is the threshold change in order parameter to stop branch sweep
 pthrs is the threshold change in num locked to stop branch sweep  
 seed2 is random seed for the heterogeneity profile  
 filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  
-example `python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.4 0.25 0.0 0.002 0.05 5.0 1 data/branches/chimera`  
+Example `python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.4 0.25 0.0 0.002 0.05 5.0 1 data/branches/chimera`  
 This will sweep out the coupling constant for the chimera initial condition.  
 ___
 # Output files
