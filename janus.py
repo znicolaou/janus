@@ -78,6 +78,8 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, delta
         sys.stdout.flush()
 
     # Integration
+    if t2 == 0:
+        t2=dt
     pbar=ProgressBar(widgets=['Integration: ', Percentage(),Bar(), ' ', ETA()], maxval=t1)
     pbar2=ProgressBar(widgets=['Clustering: ', Percentage(),Bar(), ' ', ETA()], maxval=int((t1-t3)/dt)-avgcount)
     if output:
@@ -189,6 +191,7 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, delta
 
     stop = timeit.default_timer()
     print('runtime: %f' % (stop - start))
+    return [sigma, delta, np.mean(r[int(t3 / dt):]), meanlocked]
 ######################################################################################
 
 ############################# Adiabatic coupling branch sweep #############################
@@ -196,62 +199,64 @@ def branchsigmasweep(N, t1, t2, t3, dt, avgcount, thrs, sigma0, beta, rthrs, pth
     start = timeit.default_timer()
 
     cont=True
-    
+    if(os.path.isfile(filebase+"sweep.dat")):
+        os.system('rm '+ filebase+"sweep.dat")
+
     #forward
     sigma=sigma0
     sh.copyfile(filebase+"ic.dat",filebase+"currentic.dat")
-    runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
+    ret=runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
 
     while cont:
-        print('forward %.4f %.3f' %(delta, sigma))
+        print('forward ', *ret)
         sh.copyfile(filebase+"currentfs.dat",filebase+"currentic.dat")
-        runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma+dsigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
+        ret=runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma+dsigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
         sigma=sigma+dsigma
             
         outs=np.loadtxt(filebase+"currentorder.dat")
         diffs=np.diff(outs,axis=0)[-1]
         if np.abs(diffs[2]) > rthrs or np.abs(diffs[3])>pthrs or np.round(sigma,3)>=0.6 or np.round(sigma,3)<=0.2:
             cont=False
+    print('forward end ', *ret)
+    sigma2=sigma-dsigma
 
     if(os.path.isfile(filebase+"currentorder.dat")):
         os.system('sed \$d ' + filebase+"currentorder.dat >> " + filebase + "sweep.dat")
-        #os.system('cp ' + filebase+"currentorder.dat " + filebase + "forwardsweep.dat")
         os.remove(filebase+"currentorder.dat")
         os.remove(filebase+"currentic.dat")
         os.remove(filebase+"currentfs.dat")
 
     #backward
-    sigma2=sigma-dsigma
-
     sigma=sigma0
     cont=True
     sh.copyfile(filebase+"ic.dat",filebase+"currentic.dat")
-    runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
+    ret=runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
 
     while cont:
-        print('backward %.4f %.3f' %(delta, sigma))
+        print('backward ', *ret)
         sh.copyfile(filebase+"currentfs.dat",filebase+"currentic.dat")
-        runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma-dsigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
+        ret=runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma-dsigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
         sigma=sigma-dsigma
             
         outs=np.loadtxt(filebase+"currentorder.dat")
         diffs=np.diff(outs,axis=0)[-1]
         if np.abs(diffs[2]) > rthrs or np.abs(diffs[3])>pthrs or np.round(sigma-dsigma,3)>0.6 or np.round(sigma+dsigma,3)<0.2:
             cont=False
-    
+
+    print('backward end ', *ret)
     sigma1=sigma+dsigma
     crits=[sigma1, sigma2]
-    np.savetxt(filebase+'crits.dat',crits)
+    np.savetxt(filebase+'crits.dat',crits, fmt="%.12f")
 
     if(os.path.isfile(filebase+"currentorder.dat")):
         os.system('sed \$d ' + filebase+"currentorder.dat >> " + filebase + "sweep.dat")
-        #os.system('cp ' + filebase+"currentorder.dat " + filebase + "backwardsweep.dat")
         os.remove(filebase+"currentorder.dat")
         os.remove(filebase+"currentic.dat")
         os.remove(filebase+"currentfs.dat")
 
     stop = timeit.default_timer()
     print('sweeptime: %f' % (stop - start))
+
 ###########################################################################################
 
 if(len(sys.argv) != 18 and len(sys.argv) != 16):
@@ -276,8 +281,9 @@ if(len(sys.argv) != 18 and len(sys.argv) != 16):
     print('seed2 is random seed for heterogeneity  ')
     print('output is 1 to output time data  ')
     print('filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  ')
-    print('Example: python janus.py 50 10000 0.1 9000.1 0.1 10 1e-2 0.25 0.25 0.35 0.35 0.0 0.0 2 1 data/random/random 1  ')
-    print('This example will likely produce a chimera state.  The final state data/random/randomfs.dat can be copied to chimeraic.dat to save as an initial condition.  ' )
+    print('Example: python janus.py 50 10000 0.1 9000 0.1 10 1e-2 0.25 0.25 0.4 0.4 0.0 0.0 5 1 data/random/random 1  ')
+    print('This example will likely produce a chimera state.  The final state data/random/randomfs.dat can be copied to chimeraic.dat to save as an initial condition. Run the following command to copy the file for example 2 below. ' )
+    print('mkdir -p data/branches && cp data/random/randomfs.dat data/branches/chimeraic.dat  ' )
     print('\n')
     
     print('usage 2: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [beta] [delta] [dsigma] [rthrs] [pthrs] [seed2] [filebase]  ')
@@ -297,7 +303,7 @@ if(len(sys.argv) != 18 and len(sys.argv) != 16):
     print('pthrs is the threshold change in num locked to stop branch sweep  ')
     print('seed2 is random seed for the heterogeneity profile  ')
     print('filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  ')
-    print('example: python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.35 0.25 0.0 0.004 0.02 5.0 1 data/branches/chimera  ')
+    print('example: python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.4 0.25 0.0 0.002 0.05 5.0 1 data/branches/chimera  ')
     print('This will sweep out the coupling constant for the chimera initial condition.  ' )
 
     exit()
