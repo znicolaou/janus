@@ -262,7 +262,7 @@ def branchsigmasweep(N, t1, t2, t3, dt, avgcount, thrs, sigma0, beta, rthrs, pth
 if(len(sys.argv) != 18 and len(sys.argv) != 16):
     print(len(sys.argv))
     print('Usage will depend on number of command line argument  ')
-    print('usage 1: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [sigma] [delta0] [delta] [seed] [seed2] [output] [filebase]  ')
+    print('usage 1: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [beta0] [beta] [sigma0] [sigma] [delta0] [delta] [seed] [seed2] [output] [filebase]  ')
     print('Used for single simulation runs with adiabatic parameter changes  ')
     print('N is the number of oscillators  ')
     print('t1 is the total integration time  ')
