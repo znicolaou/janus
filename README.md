@@ -27,7 +27,7 @@ seed2 is random seed for heterogeneity
 filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  
 output is 1 to output time data and 0 for shorter output  
 Example 1) `python janus.py 50 10000 0 9000 0.1 10 1e-2 0.25 0.25 0.4 0.4 0.0 0.0 5 1 data/random/random 1`  
-This example will likely produce a chimera state.  The final state data/random/randomfs.dat can be copied to chimeraic.dat to save as an initial condition. Run the following command to copy the file for example 2 below. 
+This example will likely produce a chimera state.  The final state data/random/randomfs.dat can be copied to chimeraic.dat to save as an initial condition. Run the following command to copy the file for Example 2 below.  
 `mkdir -p data/branches && cp data/random/randomfs.dat data/branches/chimeraic.dat`
 
 usage 2: `python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [beta] [delta] [dsigma] [rthrs] [pthrs] [seed2] [filebase]`  
