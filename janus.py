@@ -262,7 +262,7 @@ def branchsigmasweep(N, t1, t2, t3, dt, avgcount, thrs, sigma0, beta, rthrs, pth
 if(len(sys.argv) != 18 and len(sys.argv) != 16):
     print(len(sys.argv))
     print('Usage will depend on number of command line argument  ')
-    print('usage 1: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [beta0] [beta] [sigma0] [sigma] [delta0] [delta] [seed] [seed2] [output] [filebase]  ')
+    print('usage 1: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [beta0] [beta] [sigma0] [sigma] [delta0] [delta] [seed] [seed2] [filebase] [output] ')
     print('Used for single simulation runs with adiabatic parameter changes  ')
     print('N is the number of oscillators  ')
     print('t1 is the total integration time  ')
@@ -279,8 +279,8 @@ if(len(sys.argv) != 18 and len(sys.argv) != 16):
     print('delta is final frequency heterogeneity  ')
     print('seed is random seed for initial condition (if filebaseic.dat does not exist, otherwise initial conditions from file are used)  ')
     print('seed2 is random seed for heterogeneity  ')
-    print('output is 1 to output time data  ')
     print('filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  ')
+    print('output is 1 to output time data and 0 for shorter output ')
     print('Example: python janus.py 50 10000 0.1 9000 0.1 10 1e-2 0.25 0.25 0.4 0.4 0.0 0.0 5 1 data/random/random 1  ')
     print('This example will likely produce a chimera state.  The final state data/random/randomfs.dat can be copied to chimeraic.dat to save as an initial condition. Run the following command to copy the file for example 2 below. ' )
     print('mkdir -p data/branches && cp data/random/randomfs.dat data/branches/chimeraic.dat  ' )
@@ -303,7 +303,7 @@ if(len(sys.argv) != 18 and len(sys.argv) != 16):
     print('pthrs is the threshold change in num locked to stop branch sweep  ')
     print('seed2 is random seed for the heterogeneity profile  ')
     print('filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  ')
-    print('example: python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.4 0.25 0.0 0.002 0.05 5.0 1 data/branches/chimera  ')
+    print('Example: python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.4 0.25 0.0 0.002 0.05 5.0 1 data/branches/chimera  ')
     print('This will sweep out the coupling constant for the chimera initial condition.  ' )
 
     exit()
