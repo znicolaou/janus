@@ -64,8 +64,8 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, delta
     # Natural frequencies
     omega=np.zeros(N)
     nu=np.zeros(N)
-    omega[:]=0.5
-    nu[:]=-0.5
+    omega[:]=args.omega1
+    nu[:]=args.omega2
     deltaomega= (np.random.random(N)-0.5)
     deltanu= (np.random.random(N)-0.5)
 
@@ -286,6 +286,8 @@ parser.add_argument("--sigma0", type=float, required=False, dest='sigma0', defau
 parser.add_argument("--sigma1", type=float, required=False, dest='sigma1', default=0.4, help='Final external coupling constant')
 parser.add_argument("--delta0", type=float, required=False, dest='delta0', default=0.0, help='Initial frequency heterogeneity')
 parser.add_argument("--delta1", type=float, required=False, dest='delta1', default=0.0, help='Final frequency heterogeneity')
+parser.add_argument("--omega1", type=float, required=False, dest='omega1', default=0.5, help='Natural frequency 1')
+parser.add_argument("--omega2", type=float, required=False, dest='omega2', default=-0.5, help='Natural frequency 2')
 parser.add_argument("--iseed", type=int, required=False, dest='iseed', default=5, help='Initial condition seed')
 parser.add_argument("--hseed", type=int, required=False, dest='hseed', default=1, help='Heterogeneity profile seed')
 parser.add_argument("--dsigma", type=float, required=False, dest='delta1', default=0.002, help='Coupling strength sweep step size')
