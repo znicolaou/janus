@@ -9,6 +9,8 @@ import shutil as sh
 from progressbar import *
 from scipy.sparse import csr_matrix
 from scipy.integrate import ode
+import argparse
+
 
 
 ############################# Order Parameter #############################
@@ -38,21 +40,26 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, delta
     start = timeit.default_timer()
     np.random.seed(seed2)
 
-
     # Network structure
     N=n
+    k=args.k
+    numlinks=args.numlinks
     A1=np.zeros((N,N))
     A2=np.zeros((N,N))
     A3=np.zeros((N,N))
     for k1 in range(N):
         for k2 in range(N):
-            if(abs((k1-k2)%n) <= 1):
+            if(abs((k1-k2)%n) <= k):
                 A1[k2,k1]=1
         A1[k1,k1]=0
         A3[k1,k1]=1
+    alter=np.random.choice(range(len(np.where((A1+A3)==0)[0])),numlinks,replace=False)
+    for alt in alter:
+        A2[np.where((A1+A3)==0)[0][alt],np.where((A1+A3)==0)[1][alt]]=np.sign(numlinks)
 
-    adjext = csr_matrix(A1)
+    adjext = csr_matrix(A1+A2)
     adjint = csr_matrix(A3)
+
 
     # Natural frequencies
     omega=np.zeros(N)
@@ -81,6 +88,8 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, delta
     # Integration
     if t2 == 0:
         t2=dt
+    if t3 == 0:
+        t3=dt
     pbar=ProgressBar(widgets=['Integration: ', Percentage(),Bar(), ' ', ETA()], maxval=t1)
     pbar2=ProgressBar(widgets=['Clustering: ', Percentage(),Bar(), ' ', ETA()], maxval=int((t1-t3)/dt)-avgcount)
     if output:
@@ -173,7 +182,7 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, delta
         print(filebase, delta, sigma, np.mean(r[int(t3 / dt):]), meanlocked, meanclusters, np.sum(A2), seed, t2)
 
         f = open(filebase + 'out.dat', 'w')
-        print(*(sys.argv), sep=' ', file=f)
+        print('./faraday.py %i %f %f %f %f %i %i %f %f %f %f'%(N, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma), file=f)
         for i in range(N):
             print(omega[i] + delta*deltaomega[i], nu[i] + delta*deltanu[i], sep=' ', file=f, end=' ')
         print('',file=f)
@@ -213,7 +222,7 @@ def branchsigmasweep(N, t1, t2, t3, dt, avgcount, thrs, sigma0, beta, rthrs, pth
         sh.copyfile(filebase+"currentfs.dat",filebase+"currentic.dat")
         ret=runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma+dsigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
         sigma=sigma+dsigma
-            
+
         outs=np.loadtxt(filebase+"currentorder.dat")
         diffs=np.diff(outs,axis=0)[-1]
         if np.abs(diffs[2]) > rthrs or np.abs(diffs[3])>pthrs or np.round(sigma,3)>=0.6 or np.round(sigma,3)<=0.2:
@@ -238,7 +247,7 @@ def branchsigmasweep(N, t1, t2, t3, dt, avgcount, thrs, sigma0, beta, rthrs, pth
         sh.copyfile(filebase+"currentfs.dat",filebase+"currentic.dat")
         ret=runsim(N, t1, t2, t3, dt, avgcount, thrs, beta, beta, np.round(sigma,3), np.round(sigma-dsigma,3), np.round(delta,4), np.round(delta,4), 1, seed2, filebase+"current", 0)
         sigma=sigma-dsigma
-            
+
         outs=np.loadtxt(filebase+"currentorder.dat")
         diffs=np.diff(outs,axis=0)[-1]
         if np.abs(diffs[2]) > rthrs or np.abs(diffs[3])>pthrs or np.round(sigma-dsigma,3)>0.6 or np.round(sigma+dsigma,3)<0.2:
@@ -259,93 +268,68 @@ def branchsigmasweep(N, t1, t2, t3, dt, avgcount, thrs, sigma0, beta, rthrs, pth
     print('sweeptime: %f' % (stop - start))
 
 ###########################################################################################
+#Command line arguments
+parser = argparse.ArgumentParser(description='Moving mesh simulation for inviscid Faraday waves with inhomogeneous substrate.')
+parser.add_argument("--filebase", type=str, required=True, dest='filebase', help='Base string for file output')
+parser.add_argument("--sweep", type=bool, required=False, dest='sweep', default=False, help='Flag to run a branch sweep')
+parser.add_argument("--output", type=bool, required=False, dest='output', default=True, help='Flag to output data')
+parser.add_argument("--number", type=int, required=False, dest='number', default=50, help='Number of Janus oscillators')
+parser.add_argument("--time", type=float, required=False, dest='time', default=10000., help='Total integration time')
+parser.add_argument("--atime", type=float, required=False, dest='atime', default=0., help='Time to adiabatically change coupling from sigma0 to sigma')
+parser.add_argument("--rtime", type=float, required=False, dest='rtime', default=9000., help='Time to start averaging order parameter')
+parser.add_argument("--dt", type=float, required=False, dest='dt', default=0.1, help='Time between outputs')
+parser.add_argument("--avgcount", type=int, required=False, dest='avgcount', default=10, help='Number of timesteps to average over for cluster counting')
+parser.add_argument("--threshold", type=float, required=False, dest='threshold', default=0.01, help='Frequency difference threshold for cluster counting')
+parser.add_argument("--beta0", type=float, required=False, dest='beta0', default=0.25, help='Initial internal coupling constant')
+parser.add_argument("--beta1", type=float, required=False, dest='beta1', default=0.25, help='Final internal coupling constant')
+parser.add_argument("--sigma0", type=float, required=False, dest='sigma0', default=0.4, help='Initial external coupling constant')
+parser.add_argument("--sigma1", type=float, required=False, dest='sigma1', default=0.4, help='Final external coupling constant')
+parser.add_argument("--delta0", type=float, required=False, dest='delta0', default=0.0, help='Initial frequency heterogeneity')
+parser.add_argument("--delta1", type=float, required=False, dest='delta1', default=0.0, help='Final frequency heterogeneity')
+parser.add_argument("--iseed", type=int, required=False, dest='iseed', default=5, help='Initial condition seed')
+parser.add_argument("--hseed", type=int, required=False, dest='hseed', default=1, help='Heterogeneity profile seed')
+parser.add_argument("--dsigma", type=float, required=False, dest='delta1', default=0.002, help='Coupling strength sweep step size')
+parser.add_argument("--rthreshold", type=float, required=False, dest='rthres', default=0.05, help='Threshold change in order parameter to stop branch sweep')
+parser.add_argument("--pthreshold", type=float, required=False, dest='pthres', default=5.0, help='Threshold change in num locked to stop branch sweep')
+parser.add_argument("--neighbors", type=int, required=False, dest='k', default=1, help='Number of neighbors')
+parser.add_argument("--links", type=int, required=False, dest='numlinks', default=0, help='Number of neighbors')
+args = parser.parse_args()
 
-if(len(sys.argv) != 18 and len(sys.argv) != 16):
-    print(len(sys.argv))
-    print('Usage will depend on number of command line argument  ')
-    print('usage 1: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [beta0] [beta] [sigma0] [sigma] [delta0] [delta] [seed] [seed2] [filebase] [output] ')
-    print('Used for single simulation runs with adiabatic parameter changes  ')
-    print('N is the number of oscillators  ')
-    print('t1 is the total integration time  ')
-    print('t2 is the time to adiabatically change coupling from sigma0 to sigma  ')
-    print('t3 is the time to start averaging r  ')
-    print('dt is the time between outputs  ')
-    print('avgcount is the number of timesteps to average over for cluster counting  ')
-    print('thrs is the frequency difference threshold for cluster counting  ')
-    print('beta0 is the initial internal coupling constant  ')
-    print('beta is the final internal coupling constant  ')
-    print('sigma0 is the initial external coupling constant  ')
-    print('sigma is the final external coupling constant  ')
-    print('delta0 is initial frequency heterogeneity  ')
-    print('delta is final frequency heterogeneity  ')
-    print('seed is random seed for initial condition (if filebaseic.dat does not exist, otherwise initial conditions from file are used)  ')
-    print('seed2 is random seed for heterogeneity  ')
-    print('filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  ')
-    print('output is 1 to output time data and 0 for shorter output ')
-    print('Example: python janus.py 50 10000 0.1 9000 0.1 10 1e-2 0.25 0.25 0.4 0.4 0.0 0.0 5 1 data/random/random 1  ')
-    print('This example will likely produce a chimera state.  The final state data/random/randomfs.dat can be copied to chimeraic.dat to save as an initial condition. Run the following command to copy the file for example 2 below. ' )
-    print('mkdir -p data/branches && cp data/random/randomfs.dat data/branches/chimeraic.dat  ' )
-    print('\n')
-    
-    print('usage 2: python explosive.py [N] [t1] [t2] [t3] [dt] [avgcount] [thrs] [sigma0] [beta] [delta] [dsigma] [rthrs] [pthrs] [seed2] [filebase]  ')
-    print('Used to adiabatically sweep out a solution branch  ')
-    print('N is the number of oscillators  ')
-    print('t1 is the total integration time  ')
-    print('t2 is the time to adiabatically change coupling from sigma0 to sigma  ')
-    print('t3 is the time to start averaging r  ')
-    print('dt is the time between outputs  ')
-    print('avgcount is the number of timesteps to average over for cluster counting  ')
-    print('thrs is the frequency difference threshold for cluster counting  ')
-    print('sigma0 is the initial external coupling constant  ')
-    print('beta is the internal coupling constant  ')
-    print('delta is frequency heterogeneity  ')
-    print('dsigma is the coupling strength step  ')
-    print('rthrs is the threshold change in order parameter to stop branch sweep  ')
-    print('pthrs is the threshold change in num locked to stop branch sweep  ')
-    print('seed2 is random seed for the heterogeneity profile  ')
-    print('filebase is the output file string base; output files are filebaseout.dat and filebaseorder.dat  ')
-    print('Example: python janus.py 50 10000 4000 5000 0.1 10 1e-2 0.4 0.25 0.0 0.002 0.05 5.0 1 data/branches/chimera  ')
-    print('This will sweep out the coupling constant for the chimera initial condition.  ' )
+if not (args.sweep):
 
-    exit()
-
-
-if(len(sys.argv) == 18):
-
-    n = int(sys.argv[1])  # oscillators
-    t1 = float(sys.argv[2])  # total time
-    t2 = float(sys.argv[3])  # time to adiabatically change sigma
-    t3 = float(sys.argv[4])  # time to start averaging r
-    dt = float(sys.argv[5])  # timestep
-    avgcount = int(sys.argv[6])  # clustering averaging count
-    thrs = float(sys.argv[7])  # clustering threshold
-    beta0 = float(sys.argv[8])  # initial internal coupling strength
-    beta = float(sys.argv[9])  # final internal coupling strength
-    sigma0 = float(sys.argv[10])  # initial external coupling strength
-    sigma = float(sys.argv[11])  # final external coupling strength
-    delta0 = float(sys.argv[12]) # initial heterogeneity strength
-    delta = float(sys.argv[13]) # final heterogeneity strength
-    seed = int(sys.argv[14])  # random seed
-    seed2 = int(sys.argv[15])  # random seed
-    filebase = sys.argv[16]  # output file name
-    output = int(sys.argv[17])  # output flag
+    n = args.number  # oscillators
+    t1 = args.time  # total time
+    t2 = args.atime  # time to adiabatically change sigma
+    t3 = args.rtime  # time to start averaging r
+    dt = args.dt  # timestep
+    avgcount = args.avgcount  # clustering averaging count
+    thrs = args.threshold  # clustering threshold
+    beta0 = args.beta0  # initial internal coupling strength
+    beta = args.beta1  # final internal coupling strength
+    sigma0 = args.sigma0 # initial external coupling strength
+    sigma = args.sigma1  # final external coupling strength
+    delta0 = args.delta0 # initial heterogeneity strength
+    delta = args.delta1 # final heterogeneity strength
+    seed = args.iseed  # random seed
+    seed2 = args.hseed  # random seed
+    filebase = args.filebase  # output file name
+    output = args.output  # output flag
     runsim (n, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma, delta0, delta, seed, seed2, filebase, output)
 
-elif(len(sys.argv) == 16):
-    
-    n = int(sys.argv[1])  # oscillators
-    t1 = float(sys.argv[2])  # total time
-    t2 = float(sys.argv[3])  # time to adiabatically change sigma
-    t3 = float(sys.argv[4])  # time to start averaging r
-    dt = float(sys.argv[5])  # timestep
-    avgcount = int(sys.argv[6])  # clustering averaging count
-    thrs = float(sys.argv[7])  # clustering threshold
-    sigma0 = float(sys.argv[8]) # initial external coupling strength
-    beta = float(sys.argv[9]) # internal coupling strength
-    delta = float(sys.argv[10]) # heterogeneity strength
-    dsigma = float(sys.argv[11]) # coupling strength step size
-    rthrs = float(sys.argv[12]) # order parameter threshold change
-    pthrs = float(sys.argv[13]) # num locked threshold change
-    seed2 = int(sys.argv[14])  # random seed for heterogeneity profile
-    filebase = sys.argv[15]  # output file name
+else:
+    n = args.number  # oscillators
+    t1 = args.time  # total time
+    t2 = args.atime  # time to adiabatically change sigma
+    t3 = args.rtime  # time to start averaging r
+    dt = args.dt  # timestep
+    avgcount = args.avgcount  # clustering averaging count
+    thrs = args.threshold  # clustering threshold
+    sigma0 = args.sigma0 # initial external coupling strength
+    beta = args.beta1  # internal coupling strength
+    delta = args.delta1 # final heterogeneity strength
+    dsigma = args.dsigma # coupling strength step size
+    rthrs = args.rthreshold # order parameter threshold change
+    pthrs = args.pthreshold # num locked threshold change
+    seed2 = args.hseed  # random seed for heterogeneity profile
+    filebase = args.filebase  # output file name
     branchsigmasweep(n, t1, t2, t3, dt, avgcount, thrs, sigma0, beta, rthrs, pthrs, delta, dsigma, seed2, filebase)
