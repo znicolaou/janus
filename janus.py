@@ -116,7 +116,7 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, dim, k, numlinks, beta0, beta, si
 	if t3 == 0:
 		t3=dt
 	pbar=ProgressBar(widgets=['Integration: ', Percentage(),Bar(), ' ', ETA()], maxval=t1)
-	pbar2=ProgressBar(widgets=['Clustering: ', Percentage(),Bar(), ' ', ETA()], maxval=int((t1-t3)/dt)-avgcount)
+	pbar2=ProgressBar(widgets=['Clustering: ', Percentage(),Bar(), ' ', ETA()], maxval=int((t1)/dt)-avgcount)
 	if output:
 		pbar.start()
 
@@ -127,13 +127,13 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, dim, k, numlinks, beta0, beta, si
 	TETA=np.ndarray( (int(t1/dt), 2*N) )
 	dTETA=np.ndarray( (int(t1/dt), 2*N) )
 
-	for n in range(int(t1/dt)):
-		t=n*dt
+	for nt in range(int(t1/dt)):
+		t=nt*dt
 		if output:
 			pbar.update(t)
 		phases=rode.integrate(rode.t + dt)
-		TETA[n] = np.angle(phases)
-		dTETA[n] = np.real(sparse_complex(t, phases, N, omega, nu, deltaomega, deltanu, adjext, adjint, t2, sigma, sigma0, beta, beta0, delta, delta0)/(1j*phases))
+		TETA[nt] = np.angle(phases)
+		dTETA[nt] = np.real(sparse_complex(t, phases, N, omega, nu, deltaomega, deltanu, adjext, adjint, t2, sigma, sigma0, beta, beta0, delta, delta0)/(1j*phases))
 	if output:
 		pbar.finish()
 
@@ -156,21 +156,21 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, dim, k, numlinks, beta0, beta, si
 	# Find oscillators that are locked avgcount steps in a row, and record their mean frequencies
 	avgclustertimes=[]
 	avglockedtimes=[]
-	for i in range(0,int((t1-t3)/dt)-avgcount,avgcount):
+	for i in range(0,int(t1/dt)-avgcount,avgcount):
 		if output:
 			pbar2.update(i)
 		avgclusters=[]
 		avglocked=np.zeros(2*N)+1
 		for i2 in range(avgcount):
 			locked=np.zeros(2*N)
-			argsort=np.argsort(dtheta[int(t3/dt)+i+i2])
+			argsort=np.argsort(dtheta[i+i2])
 			for j in range(1,2*N):
-				if abs(dtheta[int(t3/dt)+i+i2,argsort[j]]-dtheta[int(t3/dt)+i+i2,argsort[j-1]])<thrs:
+				if abs(dtheta[i+i2,argsort[j]]-dtheta[i+i2,argsort[j-1]])<thrs:
 					locked[argsort[j]]=1
 					locked[argsort[j-1]]=1
 			avglocked[np.where(locked==0)[0]]=0
 		for j in np.where(avglocked==1)[0]:
-			avgclusters.append(np.mean(dtheta[int(t3/dt)+i:int(t3/dt)+i+avgcount-1,j]))
+			avgclusters.append(np.mean(dtheta[i:i+avgcount-1,j]))
 		avgclustertimes.append(avgclusters)
 		avglockedtimes.append(avglocked)
 
@@ -181,6 +181,8 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, dim, k, numlinks, beta0, beta, si
 	meanlocked=0
 	meanclusters=0
 	count=0
+	for i in range(len(avgclustertimes)):
+		clusters=avgclustertimes[i]
 	for clusters in avgclustertimes:
 		meanlocked+=1.0*np.size(clusters)
 		if(np.size(clusters)>0):
@@ -190,9 +192,9 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, dim, k, numlinks, beta0, beta, si
 					numclusters+=1.0
 		else:
 			numclusters=0
-
-		meanclusters+=numclusters
-		count+=1
+		if i*avgcount>t3/dt:
+			meanclusters+=numclusters
+			count+=1
 	meanlocked /= count
 	meanclusters /= count
 
@@ -207,15 +209,13 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, dim, k, numlinks, beta0, beta, si
 		print(filebase, delta, sigma, np.mean(r[int(t3 / dt):]), meanlocked, meanclusters, np.sum(A2), seed, t2)
 
 		f = open(filebase + 'out.dat', 'w')
-		#n, t1, t2, t3, dt, avgcount, thrs, dim, k, numlinks, beta0, beta, sigma0, sigma, delta0, delta, omega1, omega2, seed, seed2, filebase, output
-		#print('./faraday.py %i %f %f %f %f %i %i %f %f %f %f'%(N, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma), file=f)
-		print('./faraday.py %i %f %f %f %f %i %i %i %i %i %f %f %f %f %f %f %i %i'%(n, t1, t2, t3, dt, avgcount, thrs, dim, k, numlinks, beta0, beta, sigma0, sigma, delta0, delta, omega1, omega2, seed, seed2), file=f)
+		print('%i %f %f %f %f %i %i %i %i %i %f %f %f %f %f %f %f %f %i %i'%(n, t1, t2, t3, dt, avgcount, thrs, dim, k, numlinks, beta0, beta, sigma0, sigma, delta0, delta, omega1, omega2, seed, seed2), file=f)
 		for i in range(N):
 			print(omega[i] + delta*deltaomega[i], nu[i] + delta*deltanu[i], sep=' ', file=f, end=' ')
 		print('',file=f)
 		print(*(r), sep=' ', file=f)
 		for i in range(0, 2*N):
-			print(*(theta[int(t3 / dt) - 1:, i]), sep=' ', file=f)
+			print(*(theta[:, i]), sep=' ', file=f)
 		for i in range(0, N):
 			print(*(A1[i]+A2[i]+A3[i]), sep=' ', file=f)
 		f.close()
