@@ -207,7 +207,9 @@ def runsim (n, t1, t2, t3, dt, avgcount, thrs, dim, k, numlinks, beta0, beta, si
 		print(filebase, delta, sigma, np.mean(r[int(t3 / dt):]), meanlocked, meanclusters, np.sum(A2), seed, t2)
 
 		f = open(filebase + 'out.dat', 'w')
-		print('./faraday.py %i %f %f %f %f %i %i %f %f %f %f'%(N, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma), file=f)
+		#n, t1, t2, t3, dt, avgcount, thrs, dim, k, numlinks, beta0, beta, sigma0, sigma, delta0, delta, omega1, omega2, seed, seed2, filebase, output
+		#print('./faraday.py %i %f %f %f %f %i %i %f %f %f %f'%(N, t1, t2, t3, dt, avgcount, thrs, beta0, beta, sigma0, sigma), file=f)
+		print('./faraday.py %i %f %f %f %f %i %i %i %i %i %f %f %f %f %f %f %i %i'%(n, t1, t2, t3, dt, avgcount, thrs, dim, k, numlinks, beta0, beta, sigma0, sigma, delta0, delta, omega1, omega2, seed, seed2), file=f)
 		for i in range(N):
 			print(omega[i] + delta*deltaomega[i], nu[i] + delta*deltanu[i], sep=' ', file=f, end=' ')
 		print('',file=f)
